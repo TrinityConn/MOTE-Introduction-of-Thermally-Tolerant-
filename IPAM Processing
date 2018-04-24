@@ -1,0 +1,79 @@
+#install required packages 
+
+install.packages("devtools")
+install.packages("stringr")
+install.packages("plyr")
+install.packages("reshape2")
+
+#load required
+library(devtools)
+library(plyr)
+library(stringr)
+library(reshape2)
+
+#IMPORT IPAM DATA
+Ipam_t5<-import_ipam("/Users/trini/OneDrive/Documents/Baker Lab/Baker Lab/POR/Bleaching 1 4_2_2018/t5", info.pattern = NULL)
+#load qpcr script
+source_url("https://raw.githubusercontent.com/jrcunning/IPAM2R/master/R/import_ipam.R")
+
+View(Ipam_t5)
+#write data file 
+
+write.csv(Ipam_t5, file="IPAM_5.csv", sep = ",", row.names = F)
+
+#merge t0 with sample names
+
+IPAM_0<-merge(Ipam_, IPAM, by=c("file", "AOI"))
+IPAM_0
+
+
+#merge in temperature
+Temp<-Mini.core.Bleaching.Schedule._csv
+
+#load in master file 
+IPAM<- Master
+View(IPAM)
+
+#get rid of porites
+IPAM2<-IPAM[!grepl(pattern="P.astreoides", IPAM$Species.Name), ]
+
+#load ggplot2 and dplyr
+library(ggplot2)
+library(dplyr)
+
+#means and standard error
+MeanMaster<-IPAM %>%
+  group_by(Species.Name, Day) %>%
+  summarize(Mean=mean(Y), N=length(Y),sd=sd(Y), se=sd/sqrt(N))
+#means without porites
+MeanMaster2<-IPAM2 %>%
+  group_by(Species.Name, Day) %>%
+  summarize(Mean=mean(Y), N=length(Y),sd=sd(Y), se=sd/sqrt(N))
+
+
+# line plots of mean
+ggplot(data=MeanMaster2,aes(x=Day, y=Mean, color=Species.Name))+
+  geom_errorbar(aes(ymin=Mean-se, ymax=Mean+se), width=.1)+geom_line(size=1.2)+geom_point()+
+  theme_bw()+theme(text = element_text(size=15))+xlab("Days of Heating")+ylab("Fv/Fm")+
+  ggtitle("Fv/Fm")+theme(plot.title=element_text(hjust=0.5))+scale_color_discrete("Species")+geom_hline(yintercept=0.2)
+
+
+
+ggplot(data=MeanMaster, aes(x=Day, y=Mean, color=Species.Name))+
+  geom_errorbar(aes(ymin=Mean-se, ymax=Mean+se), width=.1)+geom_line(size=1.2)+geom_point()+
+  theme_bw()+theme(text = element_text(size=15))+xlab("Days of Heating")+ylab("Fv/Fm")+
+  ggtitle("Fv/Fm")+theme(plot.title=element_text(hjust=0.5))+scale_color_discrete("Species")+geom_hline(yintercept=0.2)
+
+
+
+#graphing of current IPAM values 
+#theme (plot.title) to center titles on graphs 
+ggplot(data=IPAM, aes(x=IPAM$Day, y=IPAM$Y, fill=IPAM$Species.Name,))+ theme_bw()+geom_smooth()+ xlab("Day")+ ylab("Fv/Fm")+ ggtitle("Fv/Fm")+ scale_fill_discrete("Species")+theme(plot.title = element_text(hjust = 0.5))+geom_hline(yintercept=0.2)
+
+
+#without porites
+
+library(ggplot2)
+ggplot(data=IPAM2, aes(x=IPAM2$Day, y=IPAM2$Y, fill= IPAM2$Species.Name))+geom_smooth()+theme_bw()+ xlab("Day")+ ylab("Fv/Fm")+ ggtitle("Fv/Fm")+ scale_fill_discrete("Species")+theme(plot.title = element_text(hjust = 0.5))+geom_hline(yintercept=0.2)+theme(text = element_text(size=20))
+
+

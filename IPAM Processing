@@ -12,14 +12,14 @@ library(stringr)
 library(reshape2)
 
 #IMPORT IPAM DATA
-Ipam_t5<-import_ipam("/Users/trini/OneDrive/Documents/Baker Lab/Baker Lab/POR/Bleaching 1 4_2_2018/t5", info.pattern = NULL)
+Ipam<-import_ipam("/Users/trini/OneDrive/Documents/Baker Lab/Baker Lab/POR/Bleaching 1 4_2_2018/FILE.csv", info.pattern = NULL)
 #load qpcr script
 source_url("https://raw.githubusercontent.com/jrcunning/IPAM2R/master/R/import_ipam.R")
 
-View(Ipam_t5)
+
 #write data file 
 
-write.csv(Ipam_t5, file="IPAM_5.csv", sep = ",", row.names = F)
+write.csv(Ipam_t5, file="IPAM_.csv", sep = ",", row.names = F)
 
 #merge t0 with sample names
 
@@ -52,6 +52,7 @@ MeanMaster2<-IPAM2 %>%
 
 
 # line plots of mean
+
 ggplot(data=MeanMaster2,aes(x=Day, y=Mean, color=Species.Name))+
   geom_errorbar(aes(ymin=Mean-se, ymax=Mean+se), width=.1)+geom_line(size=1.2)+geom_point()+
   theme_bw()+theme(text = element_text(size=15))+xlab("Days of Heating")+ylab("Fv/Fm")+

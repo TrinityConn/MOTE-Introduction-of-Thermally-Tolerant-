@@ -4,55 +4,74 @@ install.packages("devtools")
 install.packages("stringr")
 install.packages("plyr")
 install.packages("reshape2")
-
-#load required
 library(devtools)
 library(plyr)
 library(stringr)
 library(reshape2)
 
 #IMPORT IPAM DATA
-Ipam<-import_ipam("/Users/trini/OneDrive/Documents/Baker Lab/Baker Lab/POR/Bleaching 1 4_2_2018/FILE.csv", info.pattern = NULL)
+
 #load qpcr script
 source_url("https://raw.githubusercontent.com/jrcunning/IPAM2R/master/R/import_ipam.R")
 
+Ipam_t5<-import_ipam("/Users/trini/OneDrive/Documents/Baker Lab/Baker Lab/POR/Bleaching 1 4_2_2018/t5", info.pattern = NULL)
+View(Ipam_t5)
+write.csv(Ipam_t5, file="IPAM_5.csv", sep = ",", row.names = F)
+View(table(Ipam_t0$file))
+View(Ipam_t0)
+View(Ipam_)
 
-#write data file 
-
-write.csv(Ipam_t5, file="IPAM_.csv", sep = ",", row.names = F)
-
-#merge t0 with sample names
+#merge with sample names
 
 IPAM_0<-merge(Ipam_, IPAM, by=c("file", "AOI"))
 IPAM_0
 
+write.csv(IPAM_0, file="Ipam_t0.csv", sep=",", row.names = F)
 
-#merge in temperature
-Temp<-Mini.core.Bleaching.Schedule._csv
-
-#load in master file 
-IPAM<- Master
-View(IPAM)
-
-#get rid of porites
-IPAM2<-IPAM[!grepl(pattern="P.astreoides", IPAM$Species.Name), ]
-
-#load ggplot2 and dplyr
-library(ggplot2)
+#plot
+library(lattice)
 library(dplyr)
 
-#means and standard error
+xyplot(Ipam_0$Y~Ipam_t0$Species, data=Ipam_t0)
+
+#temperature
+Temp<-Mini.core.Bleaching.Schedule._csv
+
+#Merged timepoints
+IPAM$species2<-factor(IPAM$Species, levels = c("M.cavernosa", "O.faveolata", "P.clivosa", "P.strigosa"))
+
+IPAM2<-IPAM[!grepl(pattern="P.astreoides", IPAM$Species.Name), ]
+
+IPAM3<-IPAM[!grepl(pattern="NA", IPAM2$Species.Name)]
+grepl(pattern = "", IPAM$Species.Name)
+IPAM<- Master
+View(IPAM)
+library(ggplot2)
+
+IPAM_TEMP<- merge(IPAM, Temp, by=c("Day"))
+
+View(IPAM_TEMP)
+
+
+library(dplyr)
+
+#means and standard error w/porites
 MeanMaster<-IPAM %>%
   group_by(Species.Name, Day) %>%
   summarize(Mean=mean(Y), N=length(Y),sd=sd(Y), se=sd/sqrt(N))
-#means without porites
+
+#filter out any NA data
+MeanMaster<-MeanMaster[!grepl(pattern="NaN", MeanMaster$sd),]
+MeanMaster2<-MeanMaster2[!grepl(pattern = "NaN", MeanMaster2$sd),]
+
+#means and standard error w/o porites
+View(MeanMaster2)
 MeanMaster2<-IPAM2 %>%
   group_by(Species.Name, Day) %>%
   summarize(Mean=mean(Y), N=length(Y),sd=sd(Y), se=sd/sqrt(N))
 
 
 # line plots of mean
-
 ggplot(data=MeanMaster2,aes(x=Day, y=Mean, color=Species.Name))+
   geom_errorbar(aes(ymin=Mean-se, ymax=Mean+se), width=.1)+geom_line(size=1.2)+geom_point()+
   theme_bw()+theme(text = element_text(size=15))+xlab("Days of Heating")+ylab("Fv/Fm")+
@@ -66,15 +85,22 @@ ggplot(data=MeanMaster, aes(x=Day, y=Mean, color=Species.Name))+
   ggtitle("Fv/Fm")+theme(plot.title=element_text(hjust=0.5))+scale_color_discrete("Species")+geom_hline(yintercept=0.2)
 
 
-
 #graphing of current IPAM values 
 #theme (plot.title) to center titles on graphs 
 ggplot(data=IPAM, aes(x=IPAM$Day, y=IPAM$Y, fill=IPAM$Species.Name,))+ theme_bw()+geom_smooth()+ xlab("Day")+ ylab("Fv/Fm")+ ggtitle("Fv/Fm")+ scale_fill_discrete("Species")+theme(plot.title = element_text(hjust = 0.5))+geom_hline(yintercept=0.2)
 
+ggplot(data=IPAM, aes(x=IPAM$Day, y=IPAM$Y, group=IPAM$Day, color=IPAM$Species))+geom_boxplot()
 
 #without porites
 
 library(ggplot2)
 ggplot(data=IPAM2, aes(x=IPAM2$Day, y=IPAM2$Y, fill= IPAM2$Species.Name))+geom_smooth()+theme_bw()+ xlab("Day")+ ylab("Fv/Fm")+ ggtitle("Fv/Fm")+ scale_fill_discrete("Species")+theme(plot.title = element_text(hjust = 0.5))+geom_hline(yintercept=0.2)+theme(text = element_text(size=20))
 
+write.csv(IPAM, file="Master.csv", sep = ",", row.names=F )
+
+#filter out cores that are lower than .2
+
+Cores<-IPAM %>%
+  filter(Y<=0.2, Day==24)
+View(Cores)
 
